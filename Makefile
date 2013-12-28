@@ -46,14 +46,14 @@ sdlnet_stub.o: sdlnet_stub.c
 	$(OCAMLC) -ccopt "-static $(CFLAGS) -g -O " $<
 
 
-sdl2_net.cma: sdlnet.cmo libsdlstub.a
-	$(OCAMLMKLIB) -o sdl2_net -oc sdl2_stubs sdlnet.cmo $(LIBS)
+sdl2_net.cma: sdlnet.cmo libsdl2net_stubs.a
+	$(OCAMLMKLIB) -o sdl2_net -oc sdl2net_stubs sdlnet.cmo $(LIBS)
 
-sdl2_net.cmxa: sdlnet.cmx libsdlstub.a
-	$(OCAMLMKLIB) -o sdl2_net -oc sdl2_stubs sdlnet.cmx $(LIBS)
+sdl2_net.cmxa: sdlnet.cmx libsdl2net_stubs.a
+	$(OCAMLMKLIB) -o sdl2_net -oc sdl2net_stubs sdlnet.cmx $(LIBS)
 
-libsdlstub.a: sdlnet_stub.o
-	$(OCAMLMKLIB) -o sdl2_net -oc sdl2_stubs sdlnet_stub.o $(LIBS)
+libsdl2net_stubs.a: sdlnet_stub.o
+	$(OCAMLMKLIB) -o sdl2_net -oc sdl2net_stubs sdlnet_stub.o $(LIBS)
 
 .PHONY: edit
 edit:
