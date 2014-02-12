@@ -16,3 +16,6 @@ external init : unit -> unit
 external quit : unit -> unit
   = "caml_SDLNet_Quit"
 
+external linked_version : unit -> int * int * int
+  = "caml_SDLNet_Linked_Version"
+

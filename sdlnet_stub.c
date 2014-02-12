@@ -31,4 +31,19 @@ caml_SDLNet_Quit(value unit)
     return Val_unit;
 }
 
+CAMLprim value
+caml_SDLNet_Linked_Version(value unit)
+{
+  CAMLparam1(unit);
+  CAMLlocal1(ver);
+
+  const SDL_version *link_version = SDLNet_Linked_Version();
+
+  ver = caml_alloc(3, 0);
+  Store_field(ver, 0, Val_int(link_version->major));
+  Store_field(ver, 1, Val_int(link_version->minor));
+  Store_field(ver, 2, Val_int(link_version->patch));
+  CAMLreturn(ver);
+}
+
 /* vim: set ts=4 sw=4 et: */
