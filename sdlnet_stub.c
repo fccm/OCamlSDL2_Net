@@ -230,4 +230,72 @@ caml_SDLNet_UDP_Unbind(value sock, value channel)
     return Val_unit;
 }
 
+static value
+value_of_IPaddress(IPaddress * address)
+{
+    CAMLparam0();
+    CAMLlocal2(addr, h);
+    
+    h = caml_alloc(4, 0);
+    
+    Store_field(h, 0, Val_int((address->host & 0xFF)));
+    Store_field(h, 1, Val_int((address->host >>  8) & 0xFF));
+    Store_field(h, 2, Val_int((address->host >> 16) & 0xFF));
+    Store_field(h, 3, Val_int((address->host >> 24) & 0xFF));
+    
+    addr = caml_alloc(2, 0);
+    Store_field(addr, 0, h);
+    Store_field(addr, 1, Val_int(address->port));
+    CAMLreturn(addr);
+}
+
+CAMLprim value
+caml_SDLNet_ResolveHost(value host, value port)
+{
+    IPaddress address;
+    int ret = SDLNet_ResolveHost(&address, String_val(host), Int_val(port));
+    if (ret == -1) {
+      caml_failwith(SDLNet_GetError());
+    }
+    
+    return value_of_IPaddress(&address);
+}
+
+static inline void
+IPaddress_of_value(
+        value ip_address,
+        IPaddress *ip,
+        const char *f_name)
+{
+    Uint32 h0, h1, h2, h3;
+    
+    value host = Field(ip_address, 0);
+    value port = Field(ip_address, 1);
+    
+    h0 = (Uint32) Long_val(Field(host, 0));
+    h1 = (Uint32) Long_val(Field(host, 1));
+    h2 = (Uint32) Long_val(Field(host, 2));
+    h3 = (Uint32) Long_val(Field(host, 3));
+    
+    if ((h0 | 0xFF) != 0xFF) caml_invalid_argument(f_name);
+    if ((h1 | 0xFF) != 0xFF) caml_invalid_argument(f_name);
+    if ((h2 | 0xFF) != 0xFF) caml_invalid_argument(f_name);
+    if ((h3 | 0xFF) != 0xFF) caml_invalid_argument(f_name);
+    
+    ip->host = h0 | (h1 << 8) | (h2 << 16) | (h3 << 24);
+    ip->port = Int_val(port);
+}
+
+CAMLprim value
+caml_SDLNet_ResolveIP(value ip_addr)
+{
+    CAMLparam1(ip_addr);
+    IPaddress ip;
+    IPaddress_of_value(ip_addr, &ip, "Sdlnet.resolve_ip");
+    
+    const char *host = SDLNet_ResolveIP(&ip);
+    
+    CAMLreturn(caml_copy_string(host));
+}
+
 /* vim: set ts=4 sw=4 et: */

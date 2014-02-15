@@ -82,3 +82,16 @@ external udp_send : sock:udp_socket -> channel:int -> packet:udp_packet -> int
 external udp_unbind : sock:udp_socket -> channel:int -> unit
   = "caml_SDLNet_UDP_Unbind"
 
+(** {3 IP} *)
+
+type ip_address =  {
+  host: int * int * int * int;
+  port: int;
+}
+
+external resolve_host : host:string -> port:int -> ip_address
+  = "caml_SDLNet_ResolveHost"
+
+external resolve_ip : ip_address -> string
+  = "caml_SDLNet_ResolveIP"
+
