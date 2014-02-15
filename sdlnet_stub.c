@@ -46,4 +46,20 @@ caml_SDLNet_Linked_Version(value unit)
   CAMLreturn(ver);
 }
 
+CAMLprim value
+caml_SDL_NET_VERSION(value unit)
+{
+    CAMLparam1(unit);
+    CAMLlocal1(ver);
+
+    SDL_version compile_version;
+    SDL_NET_VERSION(&compile_version);
+
+    ver = caml_alloc(3, 0);
+    Store_field(ver, 0, Val_int(compile_version.major));
+    Store_field(ver, 1, Val_int(compile_version.minor));
+    Store_field(ver, 2, Val_int(compile_version.patch));
+    CAMLreturn(ver);
+}
+
 /* vim: set ts=4 sw=4 et: */
