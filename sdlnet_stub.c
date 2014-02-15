@@ -16,6 +16,40 @@
 
 #include <SDL_net.h>
 
+#define OCSDLNET_CHECK_U16SIZE 1
+#ifdef OCSDLNET_CHECK_U16SIZE
+
+static inline Uint16 Uint16_val(value v)
+{
+  long d = Long_val(v);
+  if (d < 0 || d > 0xFFFF) caml_invalid_argument("uint16");
+  return ((Uint16) d);
+}
+
+#else /* OCSDLNET_CHECK_U16SIZE */
+
+#define Uint16_val(v) ((Uint16) Long_val(v))
+
+#endif /* OCSDLNET_CHECK_U16SIZE */
+
+#define Val_none Val_int(0)
+
+#define Val_UDPsocket(udpsock) ((value)(udpsock))
+#define UDPsocket_val(udpsock) ((UDPsocket)(udpsock))
+
+#define Val_UDPpacket(packet) ((value)(packet))
+#define UDPpacket_val(packet) ((UDPpacket *)(packet))
+
+static value
+Val_some(value v)
+{   
+    CAMLparam1(v);
+    CAMLlocal1(some);
+    some = caml_alloc(1, 0);
+    Store_field(some, 0, v);
+    CAMLreturn(some);
+}
+
 CAMLprim value
 caml_SDLNet_Init(value unit)
 {
@@ -60,6 +94,140 @@ caml_SDL_NET_VERSION(value unit)
     Store_field(ver, 1, Val_int(compile_version.minor));
     Store_field(ver, 2, Val_int(compile_version.patch));
     CAMLreturn(ver);
+}
+
+CAMLprim value
+ml_SDLNet_UDP_Open(value port)
+{
+    UDPsocket udpsock;
+    udpsock = SDLNet_UDP_Open(Uint16_val(port));
+    if (!udpsock) {
+        caml_failwith(SDLNet_GetError());
+    }
+    return Val_UDPsocket(udpsock);
+}
+
+CAMLprim value
+caml_SDLNet_UDP_Close(value udpsock)
+{
+    SDLNet_UDP_Close(UDPsocket_val(udpsock));
+    return Val_unit;
+}
+
+CAMLprim value
+caml_SDLNet_AllocPacket(value size)
+{
+    UDPpacket *packet;
+    packet = SDLNet_AllocPacket(Int_val(size));
+    if (!packet) {
+        caml_failwith(SDLNet_GetError());
+    }
+    return Val_UDPpacket(packet);
+}
+
+CAMLprim value 
+caml_SDLNet_FreePacket(value packet)
+{
+    SDLNet_FreePacket(UDPpacket_val(packet));
+    return Val_unit;
+}
+
+CAMLprim value
+caml_UDPpacket_set_address(value packet, value host, value port)
+{
+    UDPpacket *p = UDPpacket_val(packet);
+    Uint32 h;
+    h =  ((Uint32) Long_val(Field(host, 0)));
+    h |= ((Uint32) Long_val(Field(host, 1))) << 8;
+    h |= ((Uint32) Long_val(Field(host, 2))) << 16;
+    h |= ((Uint32) Long_val(Field(host, 3))) << 24;
+    p->address.host = h;
+    p->address.port = Int_val(port);
+    return Val_unit;
+}
+
+CAMLprim value
+caml_UDPpacket_set_data(value packet, value buf)
+{
+    UDPpacket *p = UDPpacket_val(packet);
+    p->len = caml_string_length(buf) + 1;
+    memcpy(p->data, String_val(buf), p->len);
+    return Val_unit;
+}
+
+CAMLprim value
+caml_UDPpacket_get_len(value packet)
+{
+    UDPpacket *p = UDPpacket_val(packet);
+    return Val_int(p->len);
+}
+
+CAMLprim value
+caml_UDPpacket_get_maxlen(value packet)
+{
+    UDPpacket *p = UDPpacket_val(packet);
+    return Val_int(p->maxlen);
+}
+
+CAMLprim value
+caml_get_SDLNet_Max_UDPChannels(value unit)
+{
+    return Val_int(SDLNET_MAX_UDPCHANNELS);
+}
+
+CAMLprim value
+caml_get_SDLNet_Max_UDPAddresses(value unit)
+{
+    return Val_int(SDLNET_MAX_UDPADDRESSES);
+}
+
+CAMLprim value
+caml_SDLNet_UDP_Recv(value sock, value packet)
+{
+    CAMLparam2(sock, packet);
+    CAMLlocal3(res, pc, buf);
+    
+    UDPpacket *p = UDPpacket_val(packet);
+    int ret = SDLNet_UDP_Recv(UDPsocket_val(sock), p);
+    if (ret == -1) {
+        caml_failwith(SDLNet_GetError());
+    }
+    if (ret == 0) {
+        res = Val_none;
+    }
+    if (ret == 1) {
+        pc = caml_alloc(6, 0);
+        buf = caml_alloc_string(p->len-1);
+        memcpy(String_val(buf), p->data, p->len-1);
+        
+        Store_field(pc, 0, Val_int(p->channel));
+        Store_field(pc, 1, buf);
+        Store_field(pc, 2, Val_int(p->maxlen));
+        Store_field(pc, 3, Val_int(p->status));
+        Store_field(pc, 4, caml_copy_int32(p->address.host));
+        Store_field(pc, 5, Val_int(p->address.port));
+        
+        res = Val_some(pc);
+    }
+    CAMLreturn(res);
+}
+
+CAMLprim value
+caml_SDLNet_UDP_Send(value sock, value channel, value packet)
+{
+    int numsent = SDLNet_UDP_Send(
+          UDPsocket_val(sock), Int_val(channel), UDPpacket_val(packet));
+    if (!numsent) {
+      caml_failwith(SDLNet_GetError());
+    }
+    return Val_int(numsent);
+}
+
+CAMLprim value
+caml_SDLNet_UDP_Unbind(value sock, value channel)
+{
+    SDLNet_UDP_Unbind((UDPsocket) sock, Int_val(channel));
+    return Val_unit;
 }
 
 /* vim: set ts=4 sw=4 et: */
