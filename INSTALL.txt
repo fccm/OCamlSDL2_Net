@@ -1,0 +1,11 @@
+=== Linux and Cygwin ===
+
+If you installed the overling lib in /usr/local 
+then you should be able to compile these ocaml relayers 
+with:
+
+ make INC_DIR=/usr/local/include/SDL LIB_DIR=/usr/local/lib
+
+After compiling, the installation in the directory you want 
+should be made manually for now.
+
