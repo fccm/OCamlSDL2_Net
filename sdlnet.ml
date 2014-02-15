@@ -29,7 +29,7 @@ type udp_socket
 type uint16 = int
 
 external udp_open : port:uint16 -> udp_socket
-  = "ml_SDLNet_UDP_Open"
+  = "caml_SDLNet_UDP_Open"
 
 external udp_close : sock:udp_socket -> unit
   = "caml_SDLNet_UDP_Close"

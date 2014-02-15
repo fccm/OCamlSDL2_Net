@@ -97,7 +97,7 @@ caml_SDL_NET_VERSION(value unit)
 }
 
 CAMLprim value
-ml_SDLNet_UDP_Open(value port)
+caml_SDLNet_UDP_Open(value port)
 {
     UDPsocket udpsock;
     udpsock = SDLNet_UDP_Open(Uint16_val(port));
