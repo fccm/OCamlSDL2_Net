@@ -1,7 +1,7 @@
 # OCaml and SDL_net 2.0
 
 ![OCaml and SDL_net](
-http://openclipart.org/image/250px/svg_to_png/1027/john-auto-spider.png)
+http://openclipart.org/image/250px/svg_to_png/1074/john-auto-spider.png)
 
 ## Intro
 
